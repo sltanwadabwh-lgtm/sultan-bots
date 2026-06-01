@@ -1,17 +1,19 @@
 import discord
 from discord.ext import commands
 import yt_dlp
+import os
 
 # إعدادات البوت
 intents = discord.Intents.default()
 intents.message_content = True 
-bot = commands.Bot(command_prefix='', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 # إعدادات يوتيوب مع تحسينات لمنع التقطيع
 ytdl_format_options = {
-    'format': 'bestaudio/best',
+    'format': 'bestaudio/aac',
     'quiet': True,
     'noplaylist': True,
+    'nocheckcertificate': True,
 }
 ytdl = yt_dlp.YoutubeDL(ytdl_format_options)
 
@@ -45,14 +47,14 @@ async def play_msg(ctx, *, query: str):
     
     url = data['url']
     
-    # تحسينات FFmpeg لمنع التقطيع
+    # تحسينات FFmpeg لمنع التقطيع (إضافة bufsize)
     audio = discord.FFmpegPCMAudio(
-        executable="ffmpeg.exe", 
+        executable="ffmpeg", 
         source=url, 
-        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -probesize 10M -analyzeduration 0"
+        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -probesize 10M -analyzeduration 0 -bufsize 20M"
     )
     voice_client.play(audio)
-    await ctx.send(f"تم  : {data['title']}")
+    await ctx.send(f"تم التشغيل: {data['title']}")
 
 # أمر التوقف والخروج (ت)
 @bot.command(name="ت")
@@ -72,7 +74,9 @@ async def skip(ctx):
     else:
         await ctx.send("ياحمار ما فيه شيء شغال عشان أسكبه.")
 
-# 
-import os
-# 
-bot.run(os.environ['TOKEN'])
+# تشغيل البوت بطريقة آمنة
+token = os.environ.get('TOKEN')
+if token:
+    bot.run(token)
+else:
+    print("خطأ: لم يتم العثور على TOKEN في الـ Variables داخل موقع Railway!")
